@@ -1,289 +1,107 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title> Podho_TV M3U8 Player</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Embedded M3U8 Player for streaming HLS videos">
-    <script src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://web.sdk.qcloud.com/player/tcplayer/release/v5.1.0/tcplayer.min.css" rel="stylesheet" />
-    <script src="https://web.sdk.qcloud.com/player/tcplayer/release/v5.1.0/tcplayer.v5.1.0.min.js"></script>
+    <title>podho_tv</title>
     <style>
-        :root {
-            --primary-color: #2563eb;
-            --primary-hover: #1d4ed8;
-            --secondary-color: #64748b;
-            --background-color: #ffffff;
-            --surface-color: #f8fafc;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --border-color: #e2e8f0;
-            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-        }
-
-        [data-theme="dark"] {
-            --primary-color: #3b82f6;
-            --primary-hover: #2563eb;
-            --secondary-color: #94a3b8;
-            --background-color: #0f172a;
-            --surface-color: #1e293b;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --border-color: #334155;
-            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
-        }
-
-        * {
+        body, html {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
             width: 100%;
             height: 100%;
-            background-color: var(--background-color);
-            transition: background-color 0.3s ease;
-        }
-
-        body {
-            width: 100%;
-            height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-primary);
-            transition: background-color 0.3s ease, color 0.3s ease;
             overflow: hidden;
+            background-color: #000;
         }
-
-        html[data-theme="dark"] {
-            background-color: var(--background-color);
-        }
-
-        .player-container {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background: var(--background-color);
-        }
-
-        .video-wrapper {
-            flex: 1;
-            background: #000;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #player-container-id {
+        #myElement {
             width: 100%;
             height: 100%;
         }
-
-        .loading-spinner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 5;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Hide player header for iframe embedding */
-        .embedded .video-wrapper {
-            height: 100vh;
+        .error-message {
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-family: Arial, sans-serif;
         }
     </style>
+    <script src="https://use.fontawesome.com/20603b964f.js"></script>
 </head>
-
 <body>
-    <div class="player-container">
-        <div class="video-wrapper">
-            <div class="loading-spinner" id="loading-spinner">
-                <div class="spinner"></div>
-            </div>
-            
-            <video id="player-container-id" preload="auto" playsinline webkit-playsinline>
-            </video>
-        </div>
-    </div>
+    <div id="myElement"></div>
+    <div id="error" class="error-message" style="display:none;"></div>
+    
+    <script src="https://content.jwplatform.com/libraries/IDzF9Zmk.js"></script>
+    <script type="text/javascript">
+        // Get URL parameter
+        function getParameterByName(name, url = window.location.href) {
+            name = name.replace(/[\[\]]/g, '\\$&');
+            const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+            const results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
 
-    <script>
-        var player = undefined;
-        var videoUrl = '';
+        // Default stream (if no parameter provided)
+        const defaultStream = "";
         
-        // Dark mode toggle function
-        function toggleTheme() {
-            const html = document.documentElement;
-            const body = document.body;
-            const currentTheme = body.getAttribute('data-theme');
-            
-            if (currentTheme === 'dark') {
-                body.removeAttribute('data-theme');
-                html.removeAttribute('data-theme');
-                localStorage.setItem('player-theme', 'light');
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                html.setAttribute('data-theme', 'dark');
-                localStorage.setItem('player-theme', 'dark');
-            }
-        }
+        // Get stream URL from parameter
+        let streamUrl = getParameterByName('p') || defaultStream;
         
-        // Get URL parameters
-        function getUrlParameter(name) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(name);
-        }
-        
-        // Show error message
-        function showError(message) {
-            hideLoading();
-            // You can implement an error display UI here
-            console.error('Player Error:', message);
-        }
-        
-        // Hide error message
-        function hideError() {
-            // You can implement error hiding logic here
-        }
-        
-        // Hide loading spinner
-        function hideLoading() {
-            const loadingSpinner = document.getElementById('loading-spinner');
-            loadingSpinner.style.display = 'none';
-        }
-        
-        // Initialize player
-        function initPlayer(url) {
-            if (!url) {
-                showError('No video URL parameter provided');
-                return;
-            }
-            
-            // Validate URL format
+        // Validate URL
+        function isValidUrl(url) {
             try {
                 new URL(url);
-            } catch (e) {
-                showError('Invalid video URL format');
-                return;
-            }
-            
-            videoUrl = url;
-            
-            try {
-                player = TCPlayer('player-container-id', {
-                    sources: [{
-                        src: url,
-                    }],
-                    // You need to apply for a licenseUrl from Tencent Cloud
-                    licenseUrl: 'https://license.vod2.myqcloud.com/license/v2/1252819296_1/v_cube.license',
-                    autoplay: true,
-                    controls: true,
-                    fluid: true,
-                    responsive: true,
-                    playbackRates: [0.5, 1, 1.25, 1.5, 2],
-                    language: 'zh-CN'
-                });
-                
-                // Listen to player events
-                player.ready(function() {
-                    console.log('Player is ready');
-                    hideLoading();
-                    hideError();
-                });
-                
-                player.on('error', function(error) {
-                    console.error('Player error:', error);
-                    showError('Video loading failed, please check your network connection or video source');
-                });
-                
-                player.on('loadstart', function() {
-                    console.log('Loading started');
-                    hideError();
-                });
-                
-                player.on('canplay', function() {
-                    console.log('Can start playing');
-                    hideLoading();
-                });
-                
-                // Set timeout detection
-                setTimeout(function() {
-                    if (player && player.readyState() === 0) {
-                        showError('Video loading timeout, please check your network connection');
-                    }
-                }, 15000);
-                
-            } catch (error) {
-                console.error('Failed to initialize player:', error);
-                showError('Player initialization failed');
-            }
-        }
-        
-        // Check if in iframe
-        function isInIframe() {
-            try {
-                return window.self !== window.top;
-            } catch (e) {
                 return true;
+            } catch (e) {
+                return false;
             }
         }
-        
-        // Initialize after page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Restore theme settings
-            const savedTheme = localStorage.getItem('player-theme');
-            const html = document.documentElement;
-            const body = document.body;
+
+        if (!isValidUrl(streamUrl)) {
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').innerHTML = 'Invalid stream URL provided';
+            document.getElementById('myElement').style.display = 'none';
+        } else {
+            // Initialize JW Player
+            jwplayer.key = 'ypdL3Acgwp4Uh2/LDE9dYh3W/EPwDMuA2yid4ytssfI=';
             
-            if (savedTheme === 'dark') {
-                body.setAttribute('data-theme', 'dark');
-                html.setAttribute('data-theme', 'dark');
-            }
-            
-            // Get video URL from parameters and initialize player
-            const urlParam = getUrlParameter('url');
-            if (urlParam) {
-                initPlayer(decodeURIComponent(urlParam));
-            } else {
-                showError('Please provide a video URL parameter');
-            }
-            
-            // Add embedded class if in iframe
-            if (isInIframe()) {
-                document.body.classList.add('embedded');
-            }
-        });
-        
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            if (player) {
-                player.fluid(true);
-            }
-        });
-        
-        // Prevent right-click menu (optional)
-        document.addEventListener('contextmenu', function(e) {
-            if (isInIframe()) {
-                e.preventDefault();
-            }
-        });
+            jwplayer("myElement").setup({
+                file: streamUrl,
+                type: "hls",
+                hlshtml: true,
+                playbackRateControls: [0.75, 1, 1.25, 1.5], 
+                title: 'Live Stream Player', 
+                width: "100%", 
+                height: "100%", 
+                aspectratio: '16:9',
+                repeat: 'true', 
+                autostart: true, 
+                primary: 'html5', 
+                setFullscreen: true, 
+                controls: true, 
+                showCode: true, 
+                responsive: true,
+                abouttext: "GAME24X", 
+                aboutlink: "", 
+                logo: {
+                    file: "https://i.ibb.co.com/nNjkGQXG/20250830-183803.png", 
+                    link: "https://t.me/Podho_TV", 
+                    position: "top-left", 
+                    margin: "5", 
+                    hide: true
+                }, 
+                skin: {
+                    name: "glow", 
+                    active: "red", 
+                    inactive: "", 
+                    background: ""
+                }
+            });
+        }
     </script>
+    
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4c693d9fcf1445c39b0bc860210542ab","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
